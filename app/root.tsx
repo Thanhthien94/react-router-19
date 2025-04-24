@@ -9,6 +9,11 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Toaster } from "@/components/ui/sonner";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -25,17 +30,47 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <html lang="en" suppressHydrationWarning>
+      <head suppressHydrationWarning>
+        <meta charSet="utf-8" suppressHydrationWarning />
+        <meta name="viewport" content="width=device-width, initial-scale=1" suppressHydrationWarning />
         <Meta />
         <Links />
+        {/* Style element với suppressHydrationWarning */}
+        <style suppressHydrationWarning dangerouslySetInnerHTML={{ __html: `
+          /* Styles để đảm bảo hydration mismatch không ảnh hưởng đến UI */
+          html, body { opacity: 1 !important; }
+        `}} />
+        {/* Script để xử lý hydration mismatch */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined') {
+                  window.__INITIAL_DATA__ = {
+                    timestamp: Date.now()
+                  };
+                }
+              })();
+            `,
+          }}
+        />
       </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
+      <body suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarTrigger />
+              <SidebarInset className="p-4">
+                {children}
+              </SidebarInset>
+            </SidebarProvider>
+            <ScrollRestoration />
+            <Scripts />
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
